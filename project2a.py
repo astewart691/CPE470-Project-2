@@ -34,8 +34,8 @@ def main( ):
 
     #  target initialization
     #  set target initial position
-    target.x.append( 0.0 )
-    target.y.append( 0.0 )
+    target.x.append( 30.0 )
+    target.y.append( 40.0 )
 
     #  set initial heading of the target
     target.theta.append( 0.0 )
@@ -47,14 +47,14 @@ def main( ):
     #  robot Initialization
 
     #  initial position of the robot
-    robot.x.append( 0.0 )
-    robot.y.append( 0.0 )
+    robot.x.append( 100.0 )
+    robot.y.append( 500.0 )
 
     #  initial heading of the robot
     robot.theta.append( 0.0 )
 
     #  initial velocity of the robot
-    robotVel.append( 0.1 )
+    robotVel.append( 5 )
 
     ########################################
     #  determine the difference between the robot and the target
@@ -85,14 +85,12 @@ def main( ):
         #####################################
 
         #  without noise
-        qt_x = 60 - 15 * ( math.cos( deltaT ) )
-        qt_y = 30 + 15 * ( math.sin( deltaT ) )
-        plt.scatter( qt_x, qt_y, s = 2, color = "red")
+        qt_x = target.x[ index - 1 ] + 0.5 * index
+        qt_y = target.y[ index - 1 ] + 0.5 * index
 
         #  assign the position of the target
         target.x.append( qt_x )
         target.y.append( qt_y )
-        plt.scatter( target.x[ index - 1 ], target.y[ index - 1 ], s = 2, color = "black")
 
         thetaXtemp = target.x[ index ] - target.x[ index - 1 ]
         thetaYtemp = target.y[ index ] - target.y[ index - 1 ]
@@ -120,13 +118,13 @@ def main( ):
         relativeBot.y.append( relativeY )
 
         #  get phi variable
-        phi = math.atan2( relativeBot.y[ index ], relativeBot.x[ index ] )
+        phi = math.atan2( relativeBot.y[ index - 1 ], relativeBot.x[ index - 1 ] )
 
         #  get the magnitude of the robot and target relative position
-        magRobTarg = math.sqrt( math.pow( relativeBot.x[ index ], 2 ) + math.pow( relativeBot.y[ index ], 2 ) )
+        magRobTarg = math.sqrt( math.pow( relativeBot.x[ index - 1 ], 2 ) + math.pow( relativeBot.y[ index - 1], 2 ) )
 
         magTarg = math.sqrt( math.pow( targetVel, 2 ) )
-        anglePhi = abs( math.cos( target.theta[ index ] - phi ))
+        anglePhi = abs( math.cos( target.theta[ index - 1 ] - phi ))
         subVariableOne = math.pow( magTarg, 2 )
         subVariableTwo = 2 * lmbda * magRobTarg * magTarg * anglePhi
         subVariableThree = math.pow( lmbda, 2 ) + math.pow( magRobTarg, 2 )
@@ -134,7 +132,7 @@ def main( ):
         robotVel.append( min( intVelDifRobot, velMax ) )
 
         #  determine robot theta
-        subVariableOne = magTarg * math.sin( target.theta[ index ] - phi )
+        subVariableOne = magTarg * math.sin( target.theta[ index - 1 ] - phi )
         subVariableTwo = math.sqrt( math.pow( robotVel[ index - 1 ], 2 ) )
         omega = phi + math.asin( subVariableOne / subVariableTwo )
 
@@ -146,29 +144,27 @@ def main( ):
         #  increment deltaT by 0.05
         deltaT += 0.05
 
-    plt.show()
-
     #####################################
 
     #  display the robot and target location tracking
-    for index in range( 0 , length ):
-        plt.scatter( robot.x[ index ] , robot.y[ index ] , s = 2 , color = "blue" )
+    for index in range( -1 , length ):
+        plt.scatter( robot.x[ index  ] , robot.y[ index ] , s = 2 , color = "black" )
         plt.scatter( target.x[ index ] , target.y[ index ] , s = 2 , color = "red" )
 
     plt.show()
-'''
+
     #  display the velocity and iteration scatter plot
     for index in range( -1 , length ):
-        plt.scatter( index, robotVel[ index ], s = 2, color = "blue" )
+        plt.scatter( index, robotVel[ index ], s = 2, color = "black" )
         plt.scatter( index, targetVel, s = 2, color = "red" )
 
     plt.show()
 
     #  display theta for robot and target
-    for index in range( -1 , length + 1):
-        plt.scatter( index, robot.theta[ index ], s = 2, color = "blue" )
+    for index in range( -1 , length ):
+        plt.scatter( index, robot.theta[ index ], s = 2, color = "black" )
         plt.scatter( index, target.theta[ index ], s = 2, color = "red" )
 
     plt.show()
-'''
+
 main()
