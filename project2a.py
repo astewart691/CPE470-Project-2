@@ -7,7 +7,7 @@ Term: Fall 2016
 
 # import libraries
 import math
-#  import numpy as np
+import numpy as np
 import matplotlib.pyplot as plt
 
 
@@ -22,7 +22,7 @@ def main( ):
     # Initialize variables
     deltaT = 0.5
     robotVel = []
-    lmbda = 8.5  # used for lambda variable
+    lmbda = 0.25  # used for lambda variable
     velMax = 50  # Max speed for the robot
     noiseMean = 0.5
     noiseSTD = 0.1
@@ -30,12 +30,11 @@ def main( ):
     robot = bot()
     target = bot()
     relativeBot = bot()
-    potentialBot = bot()
 
     #  target initialization
     #  set target initial position
-    target.x.append( 30.0 )
-    target.y.append( 40.0 )
+    target.x.append( 300 )
+    target.y.append( 60 )
 
     #  set initial heading of the target
     target.theta.append( 0.0 )
@@ -47,8 +46,8 @@ def main( ):
     #  robot Initialization
 
     #  initial position of the robot
-    robot.x.append( 100.0 )
-    robot.y.append( 500.0 )
+    robot.x.append( 0.0 )
+    robot.y.append( 0.0 )
 
     #  initial heading of the robot
     robot.theta.append( 0.0 )
@@ -65,28 +64,21 @@ def main( ):
     relativeBot.x.append( relativeX )
     relativeBot.y.append( relativeY )
 
-    #  save the relative velocity of the robot and the target
-    targetAngle = math.cos( target.theta[ 0 ])
-    robotAngle = math.cos( robot.theta[ 0 ])
-    potentialX = targetVel * targetAngle - robotVel[ 0 ] * robotAngle
-
-    targetAngle = math.sin( target.theta[ 0 ])
-    robotAngle = math.sin( robot.theta[ 0 ])
-    potentialY = targetVel * targetAngle - robotVel[ 0 ] * robotAngle
-
-    potentialBot.x.append( potentialX )
-    potentialBot.y.append( potentialY )
-
     ########################################
 
-    for index in range( 0 , length ):
+    for index in range( 1 , length ):
         # set the trajectory for the target
 
         #####################################
-
+        '''
         #  without noise
-        qt_x = target.x[ index - 1 ] + 0.5 * index
-        qt_y = target.y[ index - 1 ] + 0.5 * index
+        qt_x = 60 + target.x[ index - 1]
+        qt_y = 60
+        '''
+        #  with noise
+
+        qt_x =  60 + target.x[ index - 1] + noiseSTD * np.random.randn() + noiseMean
+        qt_y =  60 + noiseSTD * np.random.randn() + noiseMean
 
         #  assign the position of the target
         target.x.append( qt_x )
@@ -98,48 +90,49 @@ def main( ):
         target.theta.append( math.atan2( thetaYtemp, thetaXtemp ) )
 
         #####################################
-        #  with noise
-        '''
-        qt_x = 60 - 15cos( t(i) ) + noiseSTD * randn + noiseMean
-        qt_y = 30 + 15sin( t(i) ) + noiseSTD * randn + noiseMean
 
-        #  assign the position of the target
-        qt( index, : ) = [ qt_x , qt_y ]
-        '''
 
         #####################################
 
         #  enter the code here
-        #  get relative position of robot and target
-        relativeX = target.x[ index - 1 ] - robot.x[ index - 1 ]
-        relativeY = target.y[ index - 1 ] - robot.y[ index - 1 ]
-
-        relativeBot.x.append( relativeX )
-        relativeBot.y.append( relativeY )
 
         #  get phi variable
         phi = math.atan2( relativeBot.y[ index - 1 ], relativeBot.x[ index - 1 ] )
 
-        #  get the magnitude of the robot and target relative position
-        magRobTarg = math.sqrt( math.pow( relativeBot.x[ index - 1 ], 2 ) + math.pow( relativeBot.y[ index - 1], 2 ) )
+        tempArray = np.array([ targetVel ])
 
-        magTarg = math.sqrt( math.pow( targetVel, 2 ) )
-        anglePhi = abs( math.cos( target.theta[ index - 1 ] - phi ))
+        magTarg = np.linalg.norm( tempArray )
+
+        tempArray = np.array([ relativeBot.x[ index - 1 ], relativeBot.y[ index - 1 ]])
+
+        #  get the magnitude of the robot and target relative position
+        magRobTarg = np.linalg.norm( tempArray )
+
+        anglePhi = abs( math.cos( target.theta[ index ] - phi ))
         subVariableOne = math.pow( magTarg, 2 )
         subVariableTwo = 2 * lmbda * magRobTarg * magTarg * anglePhi
-        subVariableThree = math.pow( lmbda, 2 ) + math.pow( magRobTarg, 2 )
+        subVariableThree = math.pow( lmbda, 2 ) * math.pow( magRobTarg, 2 )
         intVelDifRobot = math.sqrt( subVariableOne + subVariableTwo + subVariableThree )
         robotVel.append( min( intVelDifRobot, velMax ) )
 
         #  determine robot theta
-        subVariableOne = magTarg * math.sin( target.theta[ index - 1 ] - phi )
-        subVariableTwo = math.sqrt( math.pow( robotVel[ index - 1 ], 2 ) )
-        omega = phi + math.asin( subVariableOne / subVariableTwo )
+        innerVariable = target.theta[ index ] - phi
+        variableOne = magTarg * math.sin( innerVariable )
+        robotVelVariable = robotVel[ index ]
+        variableTwo = math.sqrt( math.pow( robotVelVariable, 2 ) )
+        robot.theta.append( phi + math.asin( ( variableOne / variableTwo ) ) )
 
         #  robot dynamic controller
-        robot.x.append( robotVel[ index ] * math.cos( robot.theta[ index - 1 ] ))
-        robot.y.append( robotVel[ index ] * math.sin( robot.theta[ index - 1 ] ))
-        robot.theta.append( omega )
+        robot.x.append( robot.x[ index - 1 ] + ( deltaT * robotVel[ index ] ) * math.cos( robot.theta[ index - 1 ] ))
+        robot.y.append( robot.y[ index - 1 ] + ( deltaT * robotVel[ index ] ) * math.sin( robot.theta[ index - 1 ] ))
+
+
+        #  get relative position of robot and target
+        relativeX = target.x[ index ] - robot.x[ index ]
+        relativeY = target.y[ index ] - robot.y[ index ]
+
+        relativeBot.x.append( relativeX )
+        relativeBot.y.append( relativeY )
 
         #  increment deltaT by 0.05
         deltaT += 0.05
@@ -147,21 +140,21 @@ def main( ):
     #####################################
 
     #  display the robot and target location tracking
-    for index in range( -1 , length ):
+    for index in range( 0 , length ):
         plt.scatter( robot.x[ index  ] , robot.y[ index ] , s = 2 , color = "black" )
         plt.scatter( target.x[ index ] , target.y[ index ] , s = 2 , color = "red" )
 
     plt.show()
 
     #  display the velocity and iteration scatter plot
-    for index in range( -1 , length ):
+    for index in range( 0 , length ):
         plt.scatter( index, robotVel[ index ], s = 2, color = "black" )
         plt.scatter( index, targetVel, s = 2, color = "red" )
 
     plt.show()
 
     #  display theta for robot and target
-    for index in range( -1 , length ):
+    for index in range( 0 , length ):
         plt.scatter( index, robot.theta[ index ], s = 2, color = "black" )
         plt.scatter( index, target.theta[ index ], s = 2, color = "red" )
 
