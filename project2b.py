@@ -1,5 +1,5 @@
 """
-File Name: Project2a.py
+File Name: Project2b.py
 Author: Aarron Stewart
 Class: CPE470
 Term: Fall 2016
@@ -20,7 +20,7 @@ class bot():
 
 def main( ):
     # Initialize variables
-    deltaT = 0.5
+    deltaT = 0.05
     robotVel = []
     lmbda = 0.25  # used for lambda variable
     velMax = 50  # Max speed for the robot
@@ -30,11 +30,12 @@ def main( ):
     robot = bot()
     target = bot()
     relativeBot = bot()
-    error = [0.0]
+    error = [ 0.0 ]
+
     #  target initialization
     #  set target initial position
-    target.x.append( 300 )
-    target.y.append( 60 )
+    target.x.append( 10 )
+    target.y.append( 10 + 5 * math.sin( deltaT ))
 
     #  set initial heading of the target
     target.theta.append( 0 )
@@ -46,14 +47,14 @@ def main( ):
     #  robot Initialization
 
     #  initial position of the robot
-    robot.x.append( 300 )
-    robot.y.append( 40 )
+    robot.x.append( 0 )
+    robot.y.append( 0 )
 
     #  initial heading of the robot
     robot.theta.append( 0 )
 
     #  initial velocity of the robot
-    robotVel.append( 5 )
+    robotVel.append( 0 )
 
     ########################################
     #  determine the difference between the robot and the target
@@ -70,16 +71,16 @@ def main( ):
         # set the trajectory for the target
 
         #####################################
-        '''
+
         #  without noise
-        qt_x = 60 + target.x[ index - 1]
-        qt_y = 60
-        '''
+        qt_x = target.x[ index - 1 ] + 0.25
+        qt_y = 10 + 5 * math.sin( deltaT )
+
         #  with noise
-
-        qt_x =  60 + target.x[ index - 1] + noiseSTD * np.random.randn() + noiseMean
-        qt_y =  60 + noiseSTD * np.random.randn() + noiseMean
-
+        '''
+        qt_x =  target.x[ index - 1 ] + 0.25 + noiseSTD * np.random.randn() + noiseMean
+        qt_y =  10 + 5 * math.sin( deltaT ) + noiseSTD * np.random.randn() + noiseMean
+        '''
         #  assign the position of the target
         target.x.append( qt_x )
         target.y.append( qt_y )
@@ -130,8 +131,8 @@ def main( ):
         relativeBot.x.append( relativeX )
         relativeBot.y.append( relativeY )
 
-        tempArray = np.array( [ relativeX , relativeY ])
-        error.append( np.linalg.norm( tempArray ))
+        tempArray = np.array( [ relativeX , relativeY ] )
+        error.append( np.linalg.norm( tempArray ) )
         #  increment deltaT by 0.05
         deltaT += 0.05
 
@@ -148,7 +149,7 @@ def main( ):
     for index in range( 0 , length ):
         plt.scatter( index , error[ index ] , s = 2 , color = "black" )
 
-    plt.show()
+    plt.show( )
 
     #  display theta for robot and target
     for index in range( 0 , length ):
